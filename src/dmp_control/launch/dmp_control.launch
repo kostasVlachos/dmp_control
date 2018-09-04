@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+
+<launch>
+
+    <!-- Object load controller -->
+    <arg name="node_name" default="dmp_control_node" />
+    <node pkg="dmp_control" type="dmp_control" name="$(arg node_name)"
+          output="screen" cwd="node">
+
+          <param name="k_d" value="200.0"/>
+          <param name="d_d" value="40.0"/>
+
+          <param name="ko_d" value="40.0"/>
+          <param name="do_d" value="4.0"/>
+
+          <param name="kg" value="100.0"/>
+
+          <!--
+          <param name="N_kernels" value="30"/>
+          <param name="a_z" value="20"/>
+        -->
+
+    </node>
+
+</launch>
