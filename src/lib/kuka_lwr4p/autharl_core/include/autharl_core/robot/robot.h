@@ -568,6 +568,10 @@ public:
    */
   virtual void getJacobian(Eigen::MatrixXd &output, const int chain_index = 0);
 
+  virtual void getMassMatrix(KDL::Frame &output, const unsigned int chain_index = 0) = 0;
+  virtual void getMassMatrix(arma::mat &output, const unsigned int chain_index = 0) = 0;
+  virtual void getMassMatrix(Eigen::MatrixXd &output, const unsigned int chain_index = 0) = 0;
+
   virtual void stop();
 
   /**

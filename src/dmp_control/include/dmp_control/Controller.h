@@ -45,7 +45,8 @@ public:
 private:
 
   double k_d, d_d;
-  double ko_d, do_d, kg;
+  double ko_d, do_d, a_e;
+  double sig_c, sig_a;
 
   const int N_DOFS;
   arma::vec q_start;
@@ -56,8 +57,6 @@ private:
   void trainDMP();
 
   bool loadTrainingData(std::string &err_msg);
-
-  void gotoStartPose();
 
   arma::vec getTaskOrientation();
 

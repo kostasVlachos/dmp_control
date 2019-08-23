@@ -368,6 +368,19 @@ void Robot::setWrench(const Eigen::VectorXd &input, const int chain_index)
   setWrenchTemplate(input, chain_index);
 }
 
+void Robot::getMassMatrix(KDL::Frame &output, const unsigned int chain_index)
+{
+  // getMassMatrixTemplate(output, chain_index); //not implemented for KDL
+}
+void Robot::getMassMatrix(arma::mat &output, const unsigned int chain_index)
+{
+  getMassMatrixTemplate(output, chain_index);
+}
+void Robot::getMassMatrix(Eigen::MatrixXd &output, const unsigned int chain_index)
+{
+  getMassMatrixTemplate(output, chain_index);
+}
+
 void Robot::startJointPositionController()
 {
   // wait one tick

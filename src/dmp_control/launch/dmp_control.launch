@@ -13,7 +13,10 @@
           <param name="ko_d" value="40.0"/>
           <param name="do_d" value="4.0"/>
 
-          <param name="kg" value="100.0"/>
+          <param name="a_e" value="500.0"/>
+
+          <param name="sig_c" value="0.05"/>
+          <param name="sig_a" value="300"/>
 
           <!--
           <param name="N_kernels" value="30"/>

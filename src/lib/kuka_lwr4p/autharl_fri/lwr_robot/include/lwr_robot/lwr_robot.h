@@ -334,7 +334,7 @@ public:
 
       // set commanded Cartesian forces/torques
       FRI->SetCommandedCartForcesAndTorques(temp);
-      
+
       static float temp_position[7];
       FRI->GetMeasuredJointPositions(temp_position);
       // FRI->SetCommandedJointPositions(temp_position);
@@ -342,7 +342,7 @@ public:
       // FRI->GetMeasuredCartPose(temp_pose);
       // FRI->SetCommandedCartPose(temp_pose);
       saveLastJointPosition(temp_position); //needed for numeric differentation to obtain q_dot [isn't it?]
-      
+
     }
     else
     {
@@ -375,7 +375,7 @@ public:
             temp[i * 4 + j] = input(i, j);
           }
       }
-      
+
       // set commanded task pose
       FRI->SetCommandedCartPose(temp);
     }
@@ -407,7 +407,7 @@ public:
       for (int i = 0; i < 6; i++) {
         temp[i] = input(i);
       }
-      
+
       // set value
       FRI->SetCommandedCartStiffness(temp);
     }
@@ -439,7 +439,7 @@ public:
       for (int i = 0; i < 6; i++) {
         temp[i] = input(i);
       }
-      
+
       // set value
       FRI->SetCommandedCartDamping(temp);
     }
@@ -449,7 +449,21 @@ public:
     }
   }
 
-
+  void getMassMatrix(KDL::Frame &output, const unsigned int chain_index = 0);
+  void getMassMatrix(arma::mat &output, const unsigned int chain_index = 0);
+  void getMassMatrix(Eigen::MatrixXd &output, const unsigned int chain_index = 0);
+  template <typename T> void getMassMatrixTemplate(T &output, const unsigned int chain_index = 0)
+  {
+    float **temp;
+    FRI->GetCurrentMassMatrix(temp);
+    for (size_t i = 0; i < 7; i++)
+    {
+      for (size_t j = 0; j < 7; j++)
+      {
+        output(i, j) = temp[i][j];
+      }
+    }
+}
 
   bool isOk();
 

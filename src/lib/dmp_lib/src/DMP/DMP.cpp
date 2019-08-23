@@ -90,9 +90,9 @@ namespace as64_
     double shape_attr = this->shapeAttractor(x, y0, g);
     double goal_attr = this->goalAttractor(x, y, z, g);
 
-    double dz = ( goal_attr + shape_attr + z_c) / ( tau * y_c );
-    double dy =  z  / ( tau * y_c );
-    double dx = this->phaseDot(x) / y_c ;
+    double dz = ( goal_attr + shape_attr + z_c) / tau;
+    double dy = ( z + y_c )  / tau;
+    double dx = this->phaseDot(x);
 
     arma::vec statesDot(3);
     statesDot << dz << dy << dx;
