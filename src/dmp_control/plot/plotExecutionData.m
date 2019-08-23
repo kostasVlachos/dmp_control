@@ -19,11 +19,10 @@ s_data = read_mat(fid, binary);
 F_dist_data = read_mat(fid, binary);
 
 
-figure;
-plot(Time, s_data);
+%figure;
+%plot(Time, s_data);
 
-
-return
+%return
 
 D = size(Yr_data,1);
 
@@ -47,5 +46,13 @@ for i=1:D
     k = k+3;
 end
 
+Errs = Y_robot_data -Yr_data;
+
+figure;
+plot(Time, Errs(1,:))
+figure;
+plot(Time, Errs(2,:))
+figure;
+plot(Time, Errs(3,:))
 
 end

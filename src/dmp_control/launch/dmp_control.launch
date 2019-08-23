@@ -7,6 +7,8 @@
     <node pkg="dmp_control" type="dmp_control" name="$(arg node_name)"
           output="screen" cwd="node">
 
+          <param name="comp_on" value="true"/>
+
           <param name="k_d" value="200.0"/>
           <param name="d_d" value="40.0"/>
 

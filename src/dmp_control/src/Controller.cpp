@@ -129,6 +129,11 @@ void DMP_Control::execute()
 {
   bool exit_program = false;
 
+  bool comp_on = false;
+  ros::NodeHandle("~").getParam("comp_on",comp_on);
+
+
+
 	robot->waitNextCycle();
   arma::vec q_current;
 	robot->getJointPosition(q_current);
@@ -241,8 +246,8 @@ void DMP_Control::execute()
   		for (int i=0; i<dmp.size(); i++)
   		{
 
-  			double z_c = - a_z * b_z * e_dmp(i);
-         //double z_c = 0.0;
+  		  double z_c = ( - a_z * b_z * e_dmp(i) ) * comp_on;
+         // double z_c = 0.0;
 
   			arma::vec state_dot_ref = dmp[i]->statesDot(s, Yr(i), Zr(i), Y0(i), Yg(i), 0.0, 0.0);
   			dZr(i) = state_dot_ref(0);
@@ -334,15 +339,26 @@ void DMP_Control::execute()
       // }
       // out_file<< std::endl;
 
-      if(t>total_time)
-      {
-        std::cout<<"Experiment ended ..."<<std::endl;
-        break;
-      }
+      // if(t>total_time)
+      // {
+      //   std::cout<<"Experiment ended ..."<<std::endl;
+      //   break;
+      // }
+
+      if (s>1.1) break;
+
+      if (arma::norm(Y_robot-Yg)<5e-3) break;
 
   }
 
-  robot->setMode(arl::robot::Mode::STOPPED);
+  gotoStartPoseJointTorqCtrl(q_start, 6);
+
+  // robot->waitNextCycle();
+	// robot->getJointPosition(q_current);
+  // duration = std::max(arma::max(arma::abs(q_start-q_current))*7.0/arma::datum::pi,2.0);
+  // robot->setJointTrajectory(q_start, duration);
+
+  robot->setMode(arl::robot::Mode::POSITION_CONTROL);
 
   bool binary = true;
   io_::write_mat(Time, out, binary);
@@ -355,6 +371,54 @@ void DMP_Control::execute()
   io_::write_mat(F_dist_data, out, binary);
 
    //out_file.close();
+}
+
+void DMP_Control::gotoStartPoseJointTorqCtrl(const arma::vec &input, double duration)
+{
+
+  if (robot->mode != arl::robot::Mode::TORQUE_CONTROL) robot->setMode(arl::robot::Mode::TORQUE_CONTROL);
+
+  // setJntPosTrajTemplate(input, duration, chain_index);
+  // inital joint position values
+  arma::vec q0 = arma::zeros<arma::vec>(7);
+  arma::vec temp = arma::zeros<arma::vec>(7);
+  for (int i = 0; i < 7; i++) {
+    temp(i) = input(i);
+  }
+  robot->getJointPosition(q0);
+
+  arma::vec Kq = arma::vec().ones(7)*130;
+  arma::vec Dq = arma::vec().ones(7)*20;
+
+  arma::vec q = q0;
+  arma::vec q_prev = q;
+
+  double cycle = robot->cycle;
+
+  arma::vec qref = q0;
+  // initalize time
+  double t = 0.0;
+  // the main while
+  while (t < duration)
+  {
+    // waits for the next tick also
+    robot->waitNextCycle();
+    // compute time now
+    t += cycle;
+    // update trajectory
+    arma::mat ref = arl::robot::trajectory::get5thOrder(t, q0, temp, duration);
+
+    qref = ref.col(0);
+    arma::vec qref_dot = ref.col(1);
+    robot->getJointPosition(q);
+    arma::vec q_dot = (q - q_prev)/cycle;
+    q_prev = q;
+
+    arma::vec u = -Kq%(q-qref) - Dq%(q_dot-qref_dot);
+    // set joint positions
+    robot->setJointTorque(u);
+  }
+
 }
 
 arma::vec DMP_Control::getTaskOrientation()

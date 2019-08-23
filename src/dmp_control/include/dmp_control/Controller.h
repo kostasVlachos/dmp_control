@@ -60,6 +60,8 @@ private:
 
   arma::vec getTaskOrientation();
 
+  void gotoStartPoseJointTorqCtrl(const arma::vec &input, double duration);
+
   ros::NodeHandle n;
 
   std::shared_ptr<arl::robot::Robot> robot;
