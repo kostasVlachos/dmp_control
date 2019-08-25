@@ -46,13 +46,10 @@ for i=1:D
     k = k+3;
 end
 
-Errs = Y_robot_data -Yr_data;
+close all
+PlotErrorNorm(Time,Y_robot_data,Yr_data)
+PlotFdist(Time,F_dist_data)
+plotPath3d(Y_robot_data,Yr_data)
 
-figure;
-plot(Time, Errs(1,:))
-figure;
-plot(Time, Errs(2,:))
-figure;
-plot(Time, Errs(3,:))
 
 end
