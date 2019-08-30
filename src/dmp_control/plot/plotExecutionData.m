@@ -17,12 +17,20 @@ ddY_data = read_mat(fid, binary);
 Y_robot_data = read_mat(fid, binary);
 s_data = read_mat(fid, binary);
 F_dist_data = read_mat(fid, binary);
+% eo_data = read_mat(fid, binary);
+% u_data = read_mat(fid, binary);
 
+figure;
+plot(Time, s_data);
 
-%figure;
-%plot(Time, s_data);
+% figure;
+% plot(u_data');
+% legend({'u_1','u_2','u_3','u_4','u_5','u_6','u_7'});
 
-%return
+% figure;
+% plot(eo_data'*180/pi);
+
+% return
 
 D = size(Yr_data,1);
 
@@ -46,7 +54,7 @@ for i=1:D
     k = k+3;
 end
 
-close all
+
 PlotErrorNorm(Time,Y_robot_data,Yr_data)
 PlotFdist(Time,F_dist_data)
 plotPath3d(Y_robot_data,Yr_data)

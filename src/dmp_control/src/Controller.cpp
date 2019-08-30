@@ -84,6 +84,7 @@ bool DMP_Control::loadTrainingData(std::string &err_msg)
   io_::read_mat(dYd_data, in, binary);
   io_::read_mat(ddYd_data, in, binary);
 
+  std::cerr << "Yd_data(end) = \n" << Yd_data.col(Yd_data.n_cols-1) << "\n";
 
 
   in.close();
@@ -98,7 +99,7 @@ void DMP_Control::initDMP()
 	N_kernels = 30;
 	a_z = 80.0;
 	b_z = a_z/4.0;
-	train_method = "LWR"; // or "LS"
+  train_method = "LWR"; // or "LS"
 
 	//nh.getParam("N_kernels", N_kernels);
 
@@ -137,7 +138,11 @@ void DMP_Control::execute()
 	robot->waitNextCycle();
   arma::vec q_current;
 	robot->getJointPosition(q_current);
-  double duration = std::max(arma::max(arma::abs(q_start-q_current))*7.0/arma::datum::pi,2.0);
+  arma::vec q_i = arma::vec({-0.1378, -0.7509, 0.9985, 1.3480, -2.2301, 1.3567, 2.9350});
+  double duration = std::max(arma::max(arma::abs(q_i-q_current))*7.0/arma::datum::pi,2.0);
+  robot->setJointTrajectory(q_i, duration);
+  robot->getJointPosition(q_current);
+  duration = std::max(arma::max(arma::abs(q_start-q_current))*7.0/arma::datum::pi,2.0);
   robot->setJointTrajectory(q_start, duration);
   robot->waitNextCycle();
 
@@ -154,6 +159,7 @@ void DMP_Control::execute()
 	int i_end = Yd_data.n_cols-1;
 	arma::vec Y0 = Yd_data.col(0); // initial position
 	arma::vec Yg = Yd_data.col(i_end); // goal position
+  // Yg = arma::vec({0.43, 0.29, 0.63});
 	arma::vec Y = Y0;
 	arma::vec Yr = Y0;
 	arma::vec dY = arma::vec().zeros(N_DOFS);
@@ -179,6 +185,8 @@ void DMP_Control::execute()
 	arma::mat Y_robot_data;
 	arma::mat F_dist_data;
 	arma::mat s_data;
+  arma::mat eo_data;
+  arma::mat u_data;
 
 
   std::string data_file_out = ros::package::getPath(PACKAGE_NAME)+ "/data/output_data.bin";
@@ -281,17 +289,17 @@ void DMP_Control::execute()
 
   		robot->getTaskPosition(Y_robot);
 
-  		arma::mat J;
-  		double klc = 0.5;
-  		vel_cmd = arma::vec().zeros(6);
-  		vel_cmd.subvec(0,2) = dY + klc*(Y - Y_robot);
+  		// double klc = 0.5;
+  		// vel_cmd = arma::vec().zeros(6);
+  		// vel_cmd.subvec(0,2) = dY + klc*(Y - Y_robot);
 
+      arma::mat J;
   	  robot->getJacobian(J);
-  	  dq = arma::pinv(J)*vel_cmd;
-
+  	  // dq = arma::pinv(J)*vel_cmd;
   		v_robot = J*qdot_robot;
 
   		arma::vec Q_robot = getTaskOrientation();
+      if (arma::dot(Q_robot,Qref)<0) Q_robot = -Q_robot;
 
   		arma::vec quatDiff = math_::quatDiff(Q_robot, Qref);
   		arma::vec e_o = 2.0*quatDiff.rows(1, 3);
@@ -303,8 +311,23 @@ void DMP_Control::execute()
   		arma::vec u = -J.submat(0, 0, 2, 6).t() * ( k_d * ( Y_robot - Y) + d_d * ( v_robot.subvec(0,2) - dY )  )
   		 -J.submat(3, 0, 5, 6).t() * ( ko_d * e_o + do_d * ( v_robot.subvec(3,5) - arma::vec().zeros(3) ) );
 
+      // arma::mat Jp = J.submat(0, 0, 2, 6);
+      // arma::mat Jr = J.submat(3, 0, 5, 6);
+      // J = Jp*(arma::mat().eye(7,7) - arma::pinv(Jr)*Jr);
+      // arma::vec u = -J.t() * ( k_d * ( Y_robot - Y) + d_d * ( v_robot.subvec(0,2) - dY )  );
+
   	  //robot->setJointVelocity(dq);
   		robot->setJointTorque(u);
+
+      // int r = arma::rank(J*J.t());
+      // if (r < 6)
+      // {
+      //   std::cerr << "===========> WARNING: r = " << r << "\n";
+      // }
+
+
+
+      // u = -J.submat(0, 0, 2, 6).t() * ( k_d * ( Y_robot - Y) + d_d * ( v_robot.subvec(0,2) - dY )  );
 
       // data logging
       Time = arma::join_horiz(Time, arma::mat({t}));
@@ -316,6 +339,8 @@ void DMP_Control::execute()
       s_data = arma::join_horiz(s_data, arma::mat({s}));
       robot->getExternalWrench(F_dist);
       F_dist_data = arma::join_horiz(F_dist_data, F_dist);
+      // eo_data = arma::join_horiz(eo_data, math_::quatLog(quatDiff));
+      // u_data = arma::join_horiz(u_data, u);
 
       // out_file << t << ",";
       // for(int i=0; i<3; i++){
@@ -347,18 +372,18 @@ void DMP_Control::execute()
 
       if (s>1.1) break;
 
-      if (arma::norm(Y_robot-Yg)<5e-3) break;
+      // if (arma::norm(Y_robot-Yg)<5e-3) break;
 
   }
 
-  gotoStartPoseJointTorqCtrl(q_start, 6);
+  std::cerr << "y_data(end) = \n" << Y_robot << "\n";
+
+  // gotoStartPoseJointTorqCtrl(q_start, 6);
 
   // robot->waitNextCycle();
 	// robot->getJointPosition(q_current);
   // duration = std::max(arma::max(arma::abs(q_start-q_current))*7.0/arma::datum::pi,2.0);
   // robot->setJointTrajectory(q_start, duration);
-
-  robot->setMode(arl::robot::Mode::POSITION_CONTROL);
 
   bool binary = true;
   io_::write_mat(Time, out, binary);
@@ -369,9 +394,12 @@ void DMP_Control::execute()
   io_::write_mat(Y_robot_data, out, binary);
   io_::write_mat(s_data, out, binary);
   io_::write_mat(F_dist_data, out, binary);
+  // io_::write_mat(eo_data, out, binary);
+  // io_::write_mat(u_data, out, binary);
+  out.close();
 
-   //out_file.close();
-}
+  // robot->setMode(arl::robot::Mode::POSITION_CONTROL);
+  }
 
 void DMP_Control::gotoStartPoseJointTorqCtrl(const arma::vec &input, double duration)
 {

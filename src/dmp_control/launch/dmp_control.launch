@@ -12,7 +12,7 @@
           <param name="k_d" value="200.0"/>
           <param name="d_d" value="40.0"/>
 
-          <param name="ko_d" value="40.0"/>
+          <param name="ko_d" value="120.0"/>
           <param name="do_d" value="4.0"/>
 
           <param name="a_e" value="500.0"/>
